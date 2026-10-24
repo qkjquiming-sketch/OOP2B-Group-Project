@@ -1,11 +1,22 @@
+import os
 import sys
 from PyQt6.QtWidgets import QApplication
 
-from user_screen import UserWindow
 from admin_screen import AdminWindow
+from user_screen import UserWindow
+
 
 def main():
     app = QApplication(sys.argv)
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    qss_path = os.path.join(base_dir, "style.qss")
+
+    if os.path.exists(qss_path):
+        with open(qss_path, "r") as f:
+            app.setStyleSheet(f.read())
+    else:
+        print(f"Warning: Could not find QSS file at {qss_path}")
 
     screens = app.screens()
     user_win = UserWindow()
