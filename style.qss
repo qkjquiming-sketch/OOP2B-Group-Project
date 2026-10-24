@@ -1,1 +1,125 @@
+QMainWindow, QWidget {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+}
 
+QLabel#Title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffffff;
+    padding-bottom: 6px;
+}
+
+QFrame[class="card"] {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+}
+
+QLabel[class="section"] {
+    font-size: 15px;
+    font-weight: bold;
+    color: #58a6ff;
+    padding-bottom: 4px;
+}
+
+QLabel[class="field-label"] {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b949e;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #f0f6fc;
+    padding: 6px 10px;
+    min-height: 20px;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
+    border: 1px solid #58a6ff;
+    background-color: #161b22;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #8b949e;
+    margin-right: 8px;
+}
+
+QCheckBox {
+    color: #c9d1d9;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+    background-color: #21262d;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #238636;
+    border-color: #2e8b57;
+}
+
+QPushButton {
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+QPushButton:hover {
+    background-color: #2ea043;
+}
+
+QPushButton:pressed {
+    background-color: #1a7f37;
+}
+
+QPushButton:disabled {
+    background-color: #21262d;
+    color: #484f58;
+}
+
+QTableWidget {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    gridline-color: #21262d;
+    border-radius: 6px;
+    color: #c9d1d9;
+}
+
+QTableWidget::item {
+    padding: 6px;
+}
+
+QTableWidget::item:selected {
+    background-color: #1f6beb;
+    color: #ffffff;
+}
+
+QHeaderView::section {
+    background-color: #21262d;
+    color: #8b949e;
+    font-weight: bold;
+    border: none;
+    border-bottom: 1px solid #30363d;
+    padding: 6px;
+}
