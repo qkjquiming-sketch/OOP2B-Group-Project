@@ -17,9 +17,15 @@ class UserWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
-        root.setContentsMargins(16, 16, 16, 16)
+        root.setContentsMargins(8, 8, 8, 8)
 
-        root.addWidget(QLabel("New Print Order"))
+        title = QLabel("New Print Order Form")
+        title.setObjectName("title")
+        root.addWidget(title)
+        
+        subtitle = QLabel("Select options below to compute total price. ")
+        subtitle.setObjectName("subtitle")
+        root.addWidget(subtitle)
 
         columns = QHBoxLayout()
         columns.addLayout(self.build_form(), 1)
@@ -55,14 +61,14 @@ class UserWindow(QMainWindow):
         form.addLayout(customer_info)       # Move this later
       
     # ----- Line 2 : File Source -----
-        file_source = QLabel("File Source")
+        file_source = QLabel("File Source: ")
         file_source.setProperty("class", "field-label")
-        form.addWidget(file_source)       # Move this later
         
         # Layout
         source_row = QHBoxLayout()
         form.addLayout(source_row)
         source_row.setSpacing(8)
+        source_row.addWidget(file_source)
         self.source_group = QButtonGroup(self)
         self.source_group.setExclusive(True)
         
@@ -73,6 +79,7 @@ class UserWindow(QMainWindow):
         for button in (self.button_gmail, self.button_fb):
             button.setProperty("class", "segment")
             button.setCheckable(True)
+            button.setFixedHeight(40)
             self.source_group.addButton(button)
             source_row.addWidget(button, 1)
             
