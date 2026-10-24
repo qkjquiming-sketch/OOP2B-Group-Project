@@ -10,6 +10,7 @@ class UserWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("User Screen")
+        self.setStyleSheet("backround-color: #0d1117; color: #cd9d1d9; font-family: 'Segou UI', sans-serif; font-size: 13px;")
         self.init_ui()
 
 
@@ -20,6 +21,7 @@ class UserWindow(QMainWindow):
         root.setContentsMargins(8, 8, 8, 8)
 
         title = QLabel("New Print Order Form")
+        header.setStyleSheet("font size: 20px; font-weight: bold; color: #ffffff; padding-bottom: 8px;")
         title.setObjectName("title")
         root.addWidget(title)
         
@@ -37,6 +39,7 @@ class UserWindow(QMainWindow):
         column = QVBoxLayout()
         column.setSpacing(6)
         label = QLabel(text)
+        label.setStyleSheet("font-size: 12px; font-weight: 600; color: #8b949e;")
         label.setProperty("class", style_class)
         column.addWidget(label)
         column.addWidget(widget)
@@ -46,6 +49,8 @@ class UserWindow(QMainWindow):
     def build_form(self):
         form = QVBoxLayout()
 
+        input_style = "backround-color: #21262d; border: 1px solid #30363d; border-radius: #f0f6fc; padding: 6px 10px;"
+        
     # ----- Line 1 : Customer name and phone number -----
         # Customer name
         self.txt_name = QLineEdit()
@@ -62,6 +67,7 @@ class UserWindow(QMainWindow):
       
     # ----- Line 2 : File Source -----
         file_source = QLabel("File Source: ")
+        file_source.setStyleSheet("font-size: 12px; font-weight: 600; color: #8b949e;")
         file_source.setProperty("class", "field-label")
         
         # Layout
@@ -75,6 +81,10 @@ class UserWindow(QMainWindow):
         
         self.button_gmail = QPushButton("Gmail")
         self.button_fb = QPushButton("Facebook/Messenger")
+
+        style_unselected = "background-color: #21262d; color: #8b949e; border: 1px solid #30363d; border-radius: 6px; padding: 8px 16px; font-weight: 600;"
+        style_selected = "background-color: #238636; color: #ffffff; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold;"
+
         
         for button in (self.button_gmail, self.button_fb):
             button.setProperty("class", "segment")
@@ -85,6 +95,7 @@ class UserWindow(QMainWindow):
             
         def update_selected(clicked):
             for button in self.source_group.buttons():
+                button.setStyleSheet(style_selected if button is clicked else style_unselected)
                 button.setProperty("class", "primary" if button is clicked else "segment")
                 button.style().unpolish(button)
                 button.style().polish(button)
@@ -128,6 +139,50 @@ class UserWindow(QMainWindow):
         self.status_table.setColumnCount(3)
         self.status_table.setHorizontalHeaderLabels(["Order", "Job", "Status"])
         panel.addWidget(self.status_table)
+
+        bl_price = QLabel("Price Breakdown")
+        lbl_price.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff;")
+        panel.addWidget(lbl_price)
+
+        self.lbl_breakdown = QLabel()
+        panel.addWidget(self.lbl_breakdown)
+
+        self.lbl_total = QLabel()
+        panel.addWidget(self.lbl_total)
+
+        self.btn_place_order = QPushButton("Place Order")
+        self.btn_place_order.setStyleSheet("background-color: #238636; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px;")
+        self.btn_place_order.clicked.connect(self.place_order)
+        panel.addWidget(self.btn_place_order)
+
+        lbl_status = QLabel("Order Status")
+        lbl_status.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff;")
+        panel.addWidget(lbl_status)
+
+        self.status_table = QTableWidget()
+        self.status_table.setColumnCount(3)
+        self.status_table.setHorizontalHeaderLabels(["Order", "Job", "Status"])
+        self.status_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #161b22;
+                border: 1px solid #30363d;
+                gridline-color: #21262d;
+                color: #c9d1d9;
+            }
+            QHeaderView::section {
+                background-color: #21262d;
+                color: #8b949e;
+                font-weight: bold;
+                border: none;
+                border-bottom: 1px solid #30363d;
+            }
+        """)
+        panel.addWidget(self.status_table)
+
+        return panel
+
+    def place_order(self):
+        pass
 
 
         return panel
