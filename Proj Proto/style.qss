@@ -1,0 +1,137 @@
+UserWindow {
+    border-image: url(darkwindows.jpg) 0 0 0 0 stretch stretch;
+}
+
+QMainWindow {
+    border-image: url(darkwindows.jpg) 0 0 0 0 stretch stretch;
+}
+
+QWidget {
+    background: transparent;
+    color: #1f2328;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+}
+
+QLabel#Title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #0969da;
+    padding-bottom: 6px;
+}
+
+QFrame[class="card"] {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+}
+
+QLabel[class="section"] {
+    font-size: 15px;
+    font-weight: bold;
+    color: #0969da;
+    padding-bottom: 4px;
+}
+
+QLabel[class="field-label"] {
+    font-size: 12px;
+    font-weight: 600;
+    color: #57606a;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    color: #1f2328;
+    padding: 6px 10px;
+    min-height: 20px;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
+    border: 1px solid #0969da;
+    background-color: #ffffff;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #57606a;
+    margin-right: 8px;
+}
+
+QCheckBox {
+    color: #1f2328;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #d0d7de;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #1f883d;
+    border-color: #1f883d;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #0c62c5;
+}
+
+QPushButton {
+    background-color: #1f883d;
+    color: #ffffff;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+QPushButton:hover {
+    background-color: #1a7f37;
+}
+
+QPushButton:pressed {
+    background-color: #116329;
+}
+
+QPushButton:disabled {
+    background-color: #f6f8fa;
+    color: #8c959f;
+}
+
+QTableWidget {
+    background-color: rgba(255, 255, 255, 80%);
+    border: 1px solid #d0d7de;
+    gridline-color: #f0f2f5;
+    border-radius: 6px;
+    color: #1f2328;
+}
+
+QTableWidget::item {
+    padding: 6px;
+}
+
+QTableWidget::item:selected {
+    background-color: #0969da;
+    color: #ffffff;
+}
+
+QHeaderView::section {
+    background-color: rgba(246, 248, 250, 80%);
+    color: #57606a;
+    font-weight: bold;
+    border: none;
+    border-bottom: 1px solid #d0d7de;
+    padding: 6px;
+}
