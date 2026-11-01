@@ -1,235 +1,99 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QComboBox, QTableWidget, QFrame,
-    QTabWidget, QTableWidgetItem, QHeaderView, QSpinBox,
-    QPushButton, QFormLayout,
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QComboBox, QTableWidget, QFrame
 )
-
-from dialogs import CustomAlertDialog
-from config import Prices, Statuses
 
 
 class AdminWindow(QMainWindow):
+    COLUMNS = ["# Order", "Customer Info", "Job Details", "Source", "Amount", "Status", "Action"]
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Admin Screen")
-        self.user_window = None
-        self.orders = [] 
         self.init_ui()
 
     def init_ui(self):
-        # ----- Widgets -----
         central_widget = QWidget()
-        self.adminWindowTabs = QTabWidget()
-        
-        # Metric cards
-        salesCard = QFrame()
-        salesTitleLabel = QLabel("Sales Today")
-        self.salesLabel = QLabel("Sales Today")    # Placeholder
-        
-        ordersCard = QFrame()
-        ordersTitleLabel = QLabel("Total Orders")
-        self.ordersLabel = QLabel("Total Orders")  # Placeholder
-        
-        jobsCard = QFrame()
-        jobsTitleLabel = QLabel("Open Jobs")
-        self.jobsLabel = QLabel("Open Jobs")   # Placeholder
-        
-        # Orders heading
-        ordersTitle = QLabel("Orders")
-        ordersSubtitle = QLabel(
-            "Jobs queue and transaction history."
-        )
-        
-        # Search and filter
-        self.text_search = QLineEdit()
-        self.text_search.setPlaceholderText(
-            "Enter customer name or order code here."       # Placeholder for seach bar
-            )
-        
-        self.filterCombo = QComboBox()
-        self.filterCombo.addItems(["All Status"] + Statuses)
-        
-        # Orders Table
-        self.ordersTable = QTableWidget()
-        self.ordersTable.setColumnCount(6)
-        self.ordersTable.setHorizontalHeaderLabels([
-            "Order Number",
-            "Customer Info", 
+        self.setCentralWidget(central_widget)
+        admin_layout = QVBoxLayout(central_widget)
+
+        # Metrics
+        metrics_layout = QHBoxLayout()
+        metrics_layout.setSpacing(12)
+
+        card_sales = QFrame()
+        card_sales.setStyleSheet("background-color: #0d1712; border: 1px solid #1a2e23; border-radius: 8px; padding: 10px;")
+        layout_sales = QVBoxLayout(card_sales)
+        lbl_sales_title = QLabel("Sales Today")
+        lbl_sales_title.setStyleSheet("font-size: 11px; color: #8b949e;")
+        self.label_sales = QLabel("₱1,090")
+        self.label_sales.setStyleSheet("font-size: 22px; font-weight: bold; color: #ffffff;")
+        layout_sales.addWidget(lbl_sales_title)
+        layout_sales.addWidget(self.label_sales)
+
+        card_orders = QFrame()
+        card_orders.setStyleSheet("background-color: #0d1712; border: 1px solid #1a2e23; border-radius: 8px; padding: 10px;")
+        layout_orders = QVBoxLayout(card_orders)
+        lbl_orders_title = QLabel("Total Orders")
+        lbl_orders_title.setStyleSheet("font-size: 11px; color: #8b949e;")
+        self.label_orders = QLabel("6")
+        self.label_orders.setStyleSheet("font-size: 22px; font-weight: bold; color: #ffffff;")
+        layout_orders.addWidget(lbl_orders_title)
+        layout_orders.addWidget(self.label_orders)
+
+        card_jobs = QFrame()
+        card_jobs.setStyleSheet("background-color: #0d1712; border: 1px solid #1a2e23; border-radius: 8px; padding: 10px;")
+        layout_jobs = QVBoxLayout(card_jobs)
+        lbl_jobs_title = QLabel("Open Jobs")
+        lbl_jobs_title.setStyleSheet("font-size: 11px; color: #8b949e;")
+        self.label_jobs = QLabel("4")
+        self.label_jobs.setStyleSheet("font-size: 22px; font-weight: bold; color: #ffffff;")
+        layout_jobs.addWidget(lbl_jobs_title)
+        layout_jobs.addWidget(self.label_jobs)
+
+        metrics_layout.addWidget(card_sales)
+        metrics_layout.addWidget(card_orders)
+        metrics_layout.addWidget(card_jobs)
+
+        # Orders Section Title & Subtitle
+        title_orders = QLabel("Orders")
+        title_orders.setStyleSheet("font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 8px;")
+
+        subtitle_orders = QLabel("Live job queue and transaction history in one place. Use the filter to focus on a stage.")
+        subtitle_orders.setStyleSheet("font-size: 12px; color: #8b949e;")
+
+        # Search Bar & Status Filter
+        filter_layout = QHBoxLayout()
+        filter_layout.setSpacing(10)
+
+        self.txt_search = QLineEdit()
+        self.txt_search.setPlaceholderText("Search name or order code...")
+
+        self.combo_filter = QComboBox()
+        self.combo_filter.addItems(["All Statuses", "Pending", "Processing", "Ready", "Completed", "Cancelled"])
+
+        filter_layout.addWidget(self.txt_search, 1)
+        filter_layout.addWidget(self.combo_filter)
+
+        # Orders table
+        self.table = QTableWidget()
+        self.table.setColumnCount(7)
+        self.table.setHorizontalHeaderLabels([
+            "# Order",
+            "Customer Info",
             "Job Details",
             "Source",
             "Amount",
-            "Status"
+            "Status",
+            "Action",
         ])
-        
-        self.ordersTable.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # read only
-        self.ordersTable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch) # Stretches the columns to fill the width :D
-          
-        # ----- Layout -----
-        
-        # Tabs: Main Window and Change Prices
-        self.setCentralWidget(self.adminWindowTabs)
-        self.adminWindowTabs.addTab(central_widget, "Main Window")
-        self.adminWindowTabs.addTab(self.pricePage(), "Change Prices")
-        
-        # Sales
-        salesLayout = QVBoxLayout(salesCard)
-        salesLayout.addWidget(salesTitleLabel)
-        salesLayout.addWidget(self.salesLabel)
-        
-        # Orders
-        ordersLayout = QVBoxLayout(ordersCard)
-        ordersLayout.addWidget(ordersTitleLabel)
-        ordersLayout.addWidget(self.ordersLabel)
-        
-        # Jobs
-        jobsLayout = QVBoxLayout(jobsCard)
-        jobsLayout.addWidget(jobsTitleLabel)
-        jobsLayout.addWidget(self.jobsLabel)
-        
-        # Metrics
-        metricsLayout = QHBoxLayout()
-        metricsLayout.setSpacing(12)
-        metricsLayout.addWidget(salesCard)
-        metricsLayout.addWidget(ordersCard)
-        metricsLayout.addWidget(jobsCard)
-        
-        # Search box
-        filterLayout = QHBoxLayout()
-        filterLayout.setSpacing(10)
-        filterLayout.addWidget(self.text_search, 1)
-        filterLayout.addWidget(self.filterCombo)
-        
-        # ----- Main Layout -----
-        adminwindowLayout = QVBoxLayout(central_widget)
-        
-        adminwindowLayout.addLayout(metricsLayout)
-        adminwindowLayout.addWidget(ordersTitle)
-        adminwindowLayout.addWidget(ordersSubtitle)
-        adminwindowLayout.addLayout(filterLayout)
-        adminwindowLayout.addWidget(self.ordersTable)
-        
-        # ----- Signals -----
-        self.text_search.textChanged.connect(self.refreshTable)
-        self.filterCombo.currentIndexChanged.connect(self.refreshTable)
-        
-        self.refreshTable()
-        
-    # ---- Add Order -----
-    def addOrder(self, order):
-        self.orders.append(order)
-        self.refreshTable()
-        
-    # ----- updateStatus -----
-    def updateStatus(self, orderId, newStatus):
-        for order in self.orders:
-            if order["id"] == orderId:
-                order["status"] = newStatus
-                
-        self.refreshTable()
-        
-        if self.user_window is not None:
-            self.user_window.updateStatusRow(orderId, newStatus)
-    
-    # ----- refreshTable -----
-    def refreshTable(self):
-        search = self.text_search.text().strip().lower()
-        status = self.filterCombo.currentText()
-        
-        self.ordersTable.setRowCount(0)
-        sales = 0
-        open_jobs = 0
-        
-        for order in self.orders:
-            # Order counter (does not count Cancelled orders)
-            if order["status"] != "Cancelled":
-                sales += order["amount"]
-                
-             # Open jobs counter (does not count cancelled and completed jobs/orders)   
-            if order["status"] not in ("Completed", "Cancelled"):
-                open_jobs += 1
-                
-            matchesSearch = search in order["name"].lower() or search in order["id"].lower()    # Match name/id
-            matchesStatus = status == "All Status" or order["status"] == status                 # Match status
-            
-            if matchesSearch and matchesStatus:
-                row = self.ordersTable.rowCount()
-                self.ordersTable.insertRow(row)
-                price = f"₱{order['amount']:.0f}"
-                
-                customer = "\n".join([
-                    order["name"],
-                    order["phone"],
-                    order["account"]
-                    ])
-                
-                cells = [
-                    order["id"],
-                    customer,
-                    order["job"],
-                    order["source"],
-                    price,
-                    order["status"]
-                ]
-                
-                self.ordersTable.setItem(row, 0, QTableWidgetItem(order["id"]))
-                self.ordersTable.setItem(row, 1, QTableWidgetItem(customer))
-                self.ordersTable.setItem(row, 2, QTableWidgetItem(order["job"]))
-                self.ordersTable.setItem(row, 3, QTableWidgetItem(order["source"]))
-                self.ordersTable.setItem(row, 4, QTableWidgetItem(price))
-                
-                # Status dropdown (column 5)
-                statusCombo = QComboBox()
-                statusCombo.addItems(Statuses)
-                statusCombo.setCurrentText(order["status"])
-                statusCombo.currentTextChanged.connect(lambda newStatus, orderId=order["id"]: self.updateStatus(orderId, newStatus))
-                self.ordersTable.setCellWidget(row, 5, statusCombo)
-                
-        sales = f"₱{sales:.0f}"
-        orders = f"{len(self.orders)}"
-        open_jobs = f"{open_jobs}"
-        
-        self.ordersTable.resizeRowsToContents()     # Fits the customer info
-        self.salesLabel.setText(sales)
-        self.ordersLabel.setText(orders)
-        self.jobsLabel.setText(open_jobs)
-                
-    # ----- Price Tab -----
-    def pricePage(self):
-        # ----- Widgets -----
-        pricePageWidget = QWidget()
-        pricePageTitle = QLabel("Change Prices")
-        pricePageSubtitle = QLabel("Click SAVE PRICES to use the new prices.")
-        
-        priceFormLayout = QFormLayout()
-        self.priceSpins = []
-        
-        for label, value in Prices:
-            spin = QSpinBox()
-            spin.setRange(0, 999)
-            spin.setPrefix("₱")
-            spin.setValue(value)
-            
-            priceFormLayout.addRow(QLabel(label), spin)
-            self.priceSpins.append(spin)
-        
-        saveButton = QPushButton("Save Prices")
-        
-        # ----- Layout -----
-        pricePageLayout = QVBoxLayout(pricePageWidget)
-        pricePageLayout.addWidget(pricePageTitle)
-        pricePageLayout.addWidget(pricePageSubtitle)
-        pricePageLayout.addLayout(priceFormLayout)
-        pricePageLayout.addWidget(saveButton)
-        pricePageLayout.addStretch()
-        
-        # ----- Signals -----
-        saveButton.clicked.connect(self.savePrices)
-        return pricePageWidget
-    
-    # ----- savePrices -----
-    def savePrices(self):
-        values = []
-        for priceSpin in self.priceSpins:
-            values.append(priceSpin.value())
-        self.user_window.setPrices(*values)
+
+        # Layout [AdminWindow]
+        admin_layout.addLayout(metrics_layout)
+        admin_layout.addWidget(title_orders)
+        admin_layout.addWidget(subtitle_orders)
+        admin_layout.addLayout(filter_layout)
+        admin_layout.addWidget(self.table)
+
+    def refresh_table(self):
+        pass
