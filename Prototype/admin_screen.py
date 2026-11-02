@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QTableWidgetItem, QHeaderView, QSpinBox, QPushButton, QFormLayout
 )
 from dialogs import UpdateStatusDialog, CustomAlertDialog
-from order_log import log_order, log_status  #NEW
+from order_log import log_order, log_status 
 
 
 class AdminWindow(QMainWindow):
@@ -114,7 +114,7 @@ class AdminWindow(QMainWindow):
 
     def add_order(self, order):
         self.orders.append(order)
-        if not log_order(order):  #NEW
+        if not log_order(order): 
             CustomAlertDialog("History Not Saved", "The order was placed, but orders.txt could not be written.", self).exec()  #NEW
         self.refresh_table()
 
@@ -157,7 +157,7 @@ class AdminWindow(QMainWindow):
                 dialog = UpdateStatusDialog(order_id, order["status"], self)
                 if dialog.exec() == 1:
                     order["status"] = dialog.get_selected_status()
-                    log_status(order_id, order["status"])  #NEW
+                    log_status(order_id, order["status"]) 
                     self.refresh_table()
                     self.user_window.update_status_row(order_id, order["status"])
 
