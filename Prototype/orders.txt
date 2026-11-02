@@ -1,0 +1,18 @@
+[2026-11-03 05:11:35] NEW ORDER PS-1001
+  Customer : drae
+  Phone    : 9661754755
+  Account  : draeski
+  Source   : Facebook / Messenger
+  Job      : 10 pgs, B&W, Short, 1 copy
+  Amount   : ₱40.00
+  Status   : Pending
+------------------------------------------------------------
+[2026-11-03 05:12:29] NEW ORDER PS-1002
+  Customer : reed
+  Phone    : 9661754755
+  Account  : reedis
+  Source   : Facebook / Messenger
+  Job      : 10 pgs, B&W, Short, 1 copy
+  Amount   : ₱40.00
+  Status   : Pending
+------------------------------------------------------------

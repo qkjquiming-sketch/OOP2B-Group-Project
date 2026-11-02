@@ -4,13 +4,14 @@ from PyQt6.QtWidgets import (
     QButtonGroup, QHeaderView
 )
 from dialogs import ConfirmOrderDialog, CustomAlertDialog
+from order_log import last_order_number  #NEW
 
 
 class UserWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.admin_window = None
-        self.order_count = 1000
+        self.order_count = last_order_number()  #NEW
         self.price_paper = 2
         self.price_legal = 3
         self.price_photo_paper = 25
