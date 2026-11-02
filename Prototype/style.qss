@@ -1,9 +1,9 @@
 UserWindow {
-    border-image: url(darkwindows.jpg) 0 0 0 0 stretch stretch;
+    border-image: url(darkwindows.png) 0 0 0 0 stretch stretch;
 }
 
 QMainWindow {
-    border-image: url(darkwindows.jpg) 0 0 0 0 stretch stretch;
+    border-image: url(darkwindows.png) 0 0 0 0 stretch stretch;
 }
 
 QWidget {
