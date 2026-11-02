@@ -1,241 +1,484 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QComboBox, QSpinBox, QCheckBox, QPushButton, QTableWidget, QTableWidgetItem,
-    QButtonGroup, QHeaderView
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QLineEdit, QComboBox, QSpinBox, QCheckBox, QPushButton,
+    QTableWidget, QTableWidgetItem, QButtonGroup, QHeaderView
 )
+from dialogs import showConfirmOrder, showAlert
+from config import Prices
+from base_window import BaseWindow
+from models import Order
 
 
-class UserWindow(QMainWindow):
+class UserWindow(BaseWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PrintSync - User Screen")
-        self.setStyleSheet("background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; font-size: 13px;")
+        self.admin_window = None
+        self.orderCount = 1000
+        
+        # Prices
+        self.pricePaper = Prices[0][1]
+        self.priceLegal = Prices[1][1]
+        self.pricePhotoPaper = Prices[2][1]
+        self.priceBw = Prices[3][1]
+        self.priceColor = Prices[4][1]
+        self.priceBinding = Prices[5][1]
+        self.priceLamination = Prices[6][1]
+        
         self.init_ui()
-
+        
     def init_ui(self):
-        central = QWidget()
-        self.setCentralWidget(central)
-        root = QVBoxLayout(central)
-        root.setContentsMargins(12, 12, 12, 12)
-        root.setSpacing(12)
-
-        title = QLabel("New Print Order Form")
-        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; padding-bottom: 4px;")
-        title.setObjectName("title")
-        root.addWidget(title)
-
-        subtitle = QLabel("Select options below to compute total price.")
-        subtitle.setObjectName("subtitle")
-        subtitle.setStyleSheet("color: #8b949e;")
-        root.addWidget(subtitle)
-
-        columns = QHBoxLayout()
-        columns.setSpacing(16)
-        columns.addLayout(self.build_form(), 1)
-        columns.addLayout(self.build_right_panel(), 1)
-        root.addLayout(columns)
-
-    def labeled(self, text, widget):
-        column = QVBoxLayout()
-        column.setSpacing(6)
-        label = QLabel(text)
-        label.setStyleSheet("font-size: 12px; font-weight: 600; color: #8b949e;")
-        column.addWidget(label)
-        column.addWidget(widget)
-        return column
-
-    def build_form(self):
-        form = QVBoxLayout()
-        form.setSpacing(12)
-
-        self.txt_name = QLineEdit()
-        self.txt_name.setPlaceholderText("e.g. Juan Dela Cruz")
-
-        self.txt_phone = QLineEdit()
-        self.txt_phone.setPlaceholderText("0917-XXX-XXXX")
-
-        self.txt_account = QLineEdit()
-        self.txt_account.setPlaceholderText("Email or FB Username")
-
-        customer_info = QHBoxLayout()
-        customer_info.setSpacing(12)
-        customer_info.addLayout(self.labeled("Customer Name *", self.txt_name), 1)
-        customer_info.addLayout(self.labeled("Contact Number", self.txt_phone), 1)
-        form.addLayout(customer_info)
-
-        form.addLayout(self.labeled("Email / FB Account", self.txt_account))
-
-        file_source = QLabel("File Submission Source:")
-        file_source.setStyleSheet("font-size: 12px; font-weight: 600; color: #8b949e;")
-
-        source_row = QHBoxLayout()
-        source_row.setSpacing(8)
-        self.source_group = QButtonGroup(self)
-        self.source_group.setExclusive(True)
-
-        self.button_gmail = QPushButton("Gmail")
-        self.button_fb = QPushButton("Facebook / Messenger")
-
-        style_unselected = "background-color: #21262d; color: #8b949e; border: 1px solid #30363d; border-radius: 6px; padding: 8px 16px; font-weight: 600;"
-        style_selected = "background-color: #238636; color: #ffffff; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold;"
-
-        for button in (self.button_gmail, self.button_fb):
-            button.setCheckable(True)
-            button.setFixedHeight(36)
-            self.source_group.addButton(button)
-            source_row.addWidget(button, 1)
-
-        def update_selected(clicked):
-            for button in self.source_group.buttons():
-                button.setStyleSheet(style_selected if button is clicked else style_unselected)
-
-        self.source_group.buttonClicked.connect(update_selected)
-        self.button_gmail.setChecked(True)
-        update_selected(self.button_gmail)
-
-        form.addWidget(file_source)
-        form.addLayout(source_row)
-
-        lbl_print_spec = QLabel("Print Specifications")
-        lbl_print_spec.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff; margin-top: 10px;")
-        form.addWidget(lbl_print_spec)
-
-        self.combo_color = QComboBox()
-        self.combo_color.addItems([
-            "Black and White — +₱2.00/pg",
-            "Full Color — +₱3.00/pg"
+        # ----- Widgets -----
+        central_widget = QWidget()
+        
+        # Heading
+        titleLabel = QLabel("New Print Order Form")
+        titleLabel.setObjectName("title")
+        
+        subtitleLabel = QLabel("Select options below to compute for total price.")
+        subtitleLabel.setObjectName("subtitle")
+        
+        # Customer info
+        customerNameLabel = QLabel("Customer Name *")
+        self.customerNameInput = QLineEdit()
+        self.customerNameInput.setPlaceholderText("e.g. Juan Dela Cruz")
+        
+        customerPhoneLabel = QLabel("Contact Number")
+        self.customerPhoneInput = QLineEdit()
+        self.customerPhoneInput.setPlaceholderText("09XX XXX XXXX")
+        
+        customerAccountLabel = QLabel("Email / Facebook Account")
+        self.customerAccountInput = QLineEdit()
+        self.customerAccountInput.setPlaceholderText("Email or FB Username")
+        
+        # File Source
+        fileSourceLabel = QLabel("File Submission Source:")
+        self.fileSourceGroup = QButtonGroup(self)
+        self.fileSourceGroup.setExclusive(True)     # Makes it so that only one of the buttons can be selected
+        
+        self.gmailButton = QPushButton("Gmail")
+        self.gmailButton.setCheckable(True)
+        self.gmailButton.setFixedHeight(36)
+        
+        self.facebookButton = QPushButton("Facebook / Messenger")
+        self.facebookButton.setCheckable(True)
+        self.facebookButton.setFixedHeight(36)
+        
+        self.fileSourceGroup.addButton(self.gmailButton)
+        self.fileSourceGroup.addButton(self.facebookButton)
+        self.gmailButton.setChecked(True)           # Sets the default to Gmail\
+            
+            
+            
+        # Print specifications
+        printSpecsLabel = QLabel("Print Specification")
+        
+        # Color
+        colorLabel = QLabel("Colored")
+        self.colorCombo = QComboBox()
+        self.colorCombo.addItems([
+            f"Black and White — +₱{self.priceBw}/pg",
+            f"Full Color — +₱{self.priceColor}/pg"
         ])
-        self.combo_color.currentIndexChanged.connect(self.calculate_total)
-
-        self.combo_size = QComboBox()
-        self.combo_size.addItems([
-            "Letter / Short — ₱2.00/pg",
-            "A4 — ₱2.00/pg",
-            "Legal / Long — ₱3.00/pg"
+        
+        # Size
+        sizeLabel = QLabel("Paper Size")
+        self.sizeCombo = QComboBox()
+        self.sizeCombo.addItems([
+            f"Letter / Short — ₱{self.pricePaper}/pg",
+            f"A4 — ₱{self.pricePaper}/pg",
+            f"Legal / Long — ₱{self.priceLegal}/pg",
+            f"Photo Paper — ₱{self.pricePhotoPaper}/pg"
         ])
-        self.combo_size.currentIndexChanged.connect(self.calculate_total)
+        
+        # Pages
+        pagesLabel = QLabel("Pages")
+        self.pagesSpin = QSpinBox()
+        self.pagesSpin.setRange(1, 1000)
+        self.pagesSpin.setValue(1)
+        
+        # Compies
+        copiesLabel = QLabel("Copies")
+        self.copiesSpin = QSpinBox()
+        self.copiesSpin.setRange(1, 100)
+        self.copiesSpin.setValue(1)
+        
+        # Binding
+        self.bindingCheck = QCheckBox(f"Binding (+₱{self.priceBinding})")
+        
+        # Lamination
+        self.laminationCheck = QCheckBox(f"Lamination (+₱{self.priceLamination})")
+        
+        # Price breakdown
+        priceBreakdownLabel = QLabel("Price Breakdown")
+        self.breakdownLabel = QLabel()
+        self.totalLabel = QLabel()
+        self.placeOrderButton =  QPushButton("Place Order")
+        
+        # Order status table
+        orderStatusLabel = QLabel("Order Status")
+        self.statusTable = QTableWidget()
+        self.statusTable.setColumnCount(3)
+        self.statusTable.setHorizontalHeaderLabels(["Order", "Job", "Status"])
+        self.statusTable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.statusTable.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        
+        # ----- Layout -----
+        self.setCentralWidget(central_widget)
+        
+        # ----- Customer Info ( Name and Contact Number )
+        customerNameLayout = QVBoxLayout()
+        customerNameLayout.setSpacing(6)
+        customerNameLayout.addWidget(customerNameLabel)
+        customerNameLayout.addWidget(self.customerNameInput)
+        
+        customerPhoneLayout = QVBoxLayout()
+        customerPhoneLayout.setSpacing(6)
+        customerPhoneLayout.addWidget(customerPhoneLabel)
+        customerPhoneLayout.addWidget(self.customerPhoneInput)
+        
+        customerInfoLayout = QHBoxLayout()
+        customerInfoLayout.setSpacing(12)
+        customerInfoLayout.addLayout(customerNameLayout, 1)
+        customerInfoLayout.addLayout(customerPhoneLayout, 1)
+        
+        # ----- Account -----
+        accountLayout = QVBoxLayout()
+        accountLayout.setSpacing(6)
+        accountLayout.addWidget(customerAccountLabel)
+        accountLayout.addWidget(self.customerAccountInput)
+        
+        # ----- File Source Buttons -----
+        fileSourceLayout = QHBoxLayout()
+        fileSourceLayout.setSpacing(8)
+        fileSourceLayout.addWidget(self.gmailButton, 1)
+        fileSourceLayout.addWidget(self.facebookButton, 1)
+        
+        # ----- Colored and Paper Size -----
+        colorLayout = QVBoxLayout()
+        colorLayout.setSpacing(6)
+        colorLayout.addWidget(colorLabel)
+        colorLayout.addWidget(self.colorCombo)
+        
+        sizeLayout = QVBoxLayout()
+        sizeLayout.setSpacing(6)
+        sizeLayout.addWidget(sizeLabel)
+        sizeLayout.addWidget(self.sizeCombo)
+        
+        specsRow1Layout = QHBoxLayout()
+        specsRow1Layout.setSpacing(12)
+        specsRow1Layout.addLayout(colorLayout ,1)
+        specsRow1Layout.addLayout(sizeLayout ,1)
+        
+        # ----- Pages and Copies -----
+        
+        pagesLayout = QVBoxLayout()
+        pagesLayout.setSpacing(6)
+        pagesLayout.addWidget(pagesLabel)
+        pagesLayout.addWidget(self.pagesSpin)
+        
+        copiesLayout = QVBoxLayout()
+        copiesLayout.setSpacing(6)
+        copiesLayout.addWidget(copiesLabel)
+        copiesLayout.addWidget(self.copiesSpin)
+        
+        specsRow2Layout = QHBoxLayout()
+        specsRow2Layout.setSpacing(12)
+        specsRow2Layout.addLayout(pagesLayout, 1)
+        specsRow2Layout.addLayout(copiesLayout, 1)
+        
+        # ----- Add-ons -----
+        addonsLayout = QHBoxLayout()
+        addonsLayout.setSpacing(16)
+        addonsLayout.addWidget(self.bindingCheck)
+        addonsLayout.addWidget(self.laminationCheck)
+        
+        # ----- Left Side Layout -----
+        leftPanelLayout = QVBoxLayout()
+        leftPanelLayout.setSpacing(12)
+        leftPanelLayout.addLayout(customerInfoLayout)
+        leftPanelLayout.addLayout(accountLayout)
+        leftPanelLayout.addWidget(fileSourceLabel)
+        leftPanelLayout.addLayout(fileSourceLayout)
+        leftPanelLayout.addWidget(printSpecsLabel)
+        leftPanelLayout.addLayout(specsRow1Layout)
+        leftPanelLayout.addLayout(specsRow2Layout)
+        leftPanelLayout.addLayout(addonsLayout)
+        leftPanelLayout.addStretch()
+        leftPanelLayout.addWidget(priceBreakdownLabel)
+        leftPanelLayout.addWidget(self.breakdownLabel)
+        leftPanelLayout.addWidget(self.totalLabel)
+        leftPanelLayout.addWidget(self.placeOrderButton)
+        
+        # ----- Right Side -----
+        rightPanelLayout = QVBoxLayout()
+        rightPanelLayout.setSpacing(12)
+        rightPanelLayout.addWidget(orderStatusLabel)
+        rightPanelLayout.addWidget(self.statusTable)
+        
+        # ----- Combine Left and Right -----
+        panelsLayout = QHBoxLayout()
+        panelsLayout.setSpacing(16)
+        panelsLayout.addLayout(leftPanelLayout, 1)
+        panelsLayout.addLayout(rightPanelLayout, 1)
+        
+        # ----- Main Layout -----
+        UserWindowLayout = QVBoxLayout(central_widget)
+        UserWindowLayout.setContentsMargins(12, 12, 12, 12)
+        UserWindowLayout.setSpacing(12)
+        
+        UserWindowLayout.addWidget(titleLabel)
+        UserWindowLayout.addWidget(subtitleLabel)
+        UserWindowLayout.addLayout(panelsLayout)
+        
+        # ----- Signals -----
+        self.colorCombo.currentIndexChanged.connect(self.calculateTotal)
+        self.sizeCombo.currentIndexChanged.connect(self.calculateTotal)
+        self.pagesSpin.valueChanged.connect(self.calculateTotal)
+        self.copiesSpin.valueChanged.connect(self.calculateTotal)
+        self.bindingCheck.toggled.connect(self.calculateTotal)
+        self.laminationCheck.toggled.connect(self.calculateTotal)
+        
+        self.placeOrderButton.clicked.connect(self.placeOrder)
+        
+        self.calculateTotal()       
+        
+        # ----- Widget Styling -----
+        customerNameLabel.setProperty("class", "field-label")
+        customerPhoneLabel.setProperty("class", "field-label")
+        customerAccountLabel.setProperty("class", "field-label")
+        fileSourceLabel.setProperty("class", "field-label")
+        colorLabel.setProperty("class", "field-label")
+        sizeLabel.setProperty("class", "field-label")
+        pagesLabel.setProperty("class", "field-label")
+        copiesLabel.setProperty("class", "field-label")
 
-        spec_row1 = QHBoxLayout()
-        spec_row1.setSpacing(12)
-        spec_row1.addLayout(self.labeled("Color Mode", self.combo_color), 1)
-        spec_row1.addLayout(self.labeled("Paper Size", self.combo_size), 1)
-        form.addLayout(spec_row1)
+        printSpecsLabel.setProperty("class", "section")
+        priceBreakdownLabel.setProperty("class", "section")
+        orderStatusLabel.setProperty("class", "section")
 
-        self.spin_pages = QSpinBox()
-        self.spin_pages.setRange(1, 1000)
-        self.spin_pages.setValue(10)
-        self.spin_pages.valueChanged.connect(self.calculate_total)
+        self.breakdownLabel.setProperty("class", "card")
+        self.totalLabel.setObjectName("totalLabel")
+        self.placeOrderButton.setObjectName("placeOrderButton")
 
-        self.spin_copies = QSpinBox()
-        self.spin_copies.setRange(1, 100)
-        self.spin_copies.setValue(1)
-        self.spin_copies.valueChanged.connect(self.calculate_total)
+        self.gmailButton.setProperty("class", "sourceButton")
+        self.facebookButton.setProperty("class", "sourceButton")
+    
+    # ----- Menu bar and toolbar -----
+    def setupMenus(self):
+        resetFormAction = self.makeAction("Reset Form", self.resetForm)
+        exitAction = self.makeAction("Exit", self.close)
+        aboutAction = self.makeAction("About PrintSync", self.showAbout)
+    
+        fileMenu = self.menuBar().addMenu("File")
+        fileMenu.addAction(resetFormAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(exitAction)
+        
+        helpMenu = self.menuBar().addMenu("Help")
+        helpMenu.addAction(aboutAction)
+        
+        toolbar = self.addToolBar("Main Toolbar")
+        toolbar.setMovable(False)
+        toolbar.addAction(resetFormAction)
+        
+    # ----- resetForm -----
+    def resetForm(self):
+        self.customerNameInput.clear()
+        self.customerPhoneInput.clear()
+        self.customerAccountInput.clear()
+        self.gmailButton.setChecked(True)
+        self.colorCombo.setCurrentIndex(0)
+        self.sizeCombo.setCurrentIndex(0)
+        self.pagesSpin.setValue(1)
+        self.copiesSpin.setValue(1)
+        self.bindingCheck.setChecked(False)
+        self.laminationCheck.setChecked(False)
+    
+    # ----- calculateTotal -----
+    def calculateTotal(self) -> float:
+        # Price of the paper
+        paperText = self.sizeCombo.currentText()
+        
+        # Sets price to 3 if Legal / Long is selected
+        if "Legal" in paperText:            
+            paperCost = self.priceLegal
+            
+        # Sets price to 25 if Photo Paper is selected
+        elif "Photo Paper" in paperText:
+            paperCost = self.pricePhotoPaper
+            
+        # Sets price to 2 if Letter / Short / A4 is selected
+        else:
+            paperCost = self.pricePaper
+            
+        #  Print Price
+        
+        # Full Color price
+        colorText = self.colorCombo.currentText()
+        if "Full Color" in colorText:
+            colorName = "Full Color"
+            printCost = self.priceColor
+            
+        # Black and White
+        else:
+            colorName = "Black and White"
+            printCost = self.priceBw
+            
+        pages = self.pagesSpin.value()
+        copies = self.copiesSpin.value()
+        
+        paperTotal = pages * paperCost
+        colorTotal = pages * printCost
+        
+        # Add-ons prices
+        addonsCost = 0
+        addonsText = "None"
+        
+        if self.bindingCheck.isChecked():
+            addonsCost += self.priceBinding
+            addonsText = "Binding"
 
-        spec_row2 = QHBoxLayout()
-        spec_row2.setSpacing(12)
-        spec_row2.addLayout(self.labeled("Pages", self.spin_pages), 1)
-        spec_row2.addLayout(self.labeled("Copies", self.spin_copies), 1)
-        form.addLayout(spec_row2)
-
-        self.chk_binding = QCheckBox("Binding (+₱30)")
-        self.chk_binding.toggled.connect(self.calculate_total)
-
-        self.chk_lamination = QCheckBox("Lamination (+₱15)")
-        self.chk_lamination.toggled.connect(self.calculate_total)
-
-        addons_row = QHBoxLayout()
-        addons_row.setSpacing(16)
-        addons_row.addWidget(self.chk_binding)
-        addons_row.addWidget(self.chk_lamination)
-        form.addLayout(addons_row)
-
-        form.addStretch()
-        return form
-
-    def build_right_panel(self):
-        panel = QVBoxLayout()
-        panel.setSpacing(12)
-
-        lbl_price = QLabel("Price Breakdown")
-        lbl_price.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff;")
-        panel.addWidget(lbl_price)
-
-        self.lbl_breakdown = QLabel()
-        self.lbl_breakdown.setStyleSheet("color: #8b949e; background-color: #161b22; padding: 10px; border-radius: 6px; border: 1px solid #30363d;")
-        panel.addWidget(self.lbl_breakdown)
-
-        self.lbl_total = QLabel("₱40")
-        self.lbl_total.setStyleSheet("font-size: 22px; font-weight: bold; color: #238636;")
-        panel.addWidget(self.lbl_total)
-
-        self.btn_place_order = QPushButton("Place Order")
-        self.btn_place_order.setStyleSheet("background-color: #238636; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 10px 16px;")
-        self.btn_place_order.clicked.connect(self.place_order)
-        panel.addWidget(self.btn_place_order)
-
-        lbl_status = QLabel("Order Status")
-        lbl_status.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff; margin-top: 8px;")
-        panel.addWidget(lbl_status)
-
-        self.status_table = QTableWidget()
-        self.status_table.setColumnCount(3)
-        self.status_table.setHorizontalHeaderLabels(["Order", "Job", "Status"])
-        self.status_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.status_table.setStyleSheet(
-            "QTableWidget {"
-            "    background-color: #161b22;"
-            "    border: 1px solid #30363d;"
-            "    gridline-color: #21262d;"
-            "    color: #c9d1d9;"
-            "}"
-            "QHeaderView::section {"
-            "    background-color: #21262d;"
-            "    color: #8b949e;"
-            "    font-weight: bold;"
-            "    border: none;"
-            "    border-bottom: 1px solid #30363d;"
-            "}"
+        if self.laminationCheck.isChecked():
+            addonsCost += self.priceLamination
+            if addonsText == "None":
+                addonsText = "Lamination"
+            else:
+                addonsText += ", Lamination"
+                
+        subtotalPerCopy = paperTotal + colorTotal + addonsCost
+        totalPrice = subtotalPerCopy * copies
+        
+        self.breakdownLabel.setText(
+            f"- Base Paper ({paperText.split(' — ')[0]}): {pages} pgs * ₱{paperCost} = ₱{paperTotal}\n"
+            f"- Color Option ({colorName}): {pages} pgs * ₱{printCost} = ₱{colorTotal}\n"
+            f"- Add-ons: {addonsText} = ₱{addonsCost}\n"
+            f"- Multiplier: ₱{subtotalPerCopy} × {copies} copy"
         )
-        panel.addWidget(self.status_table)
+        self.totalLabel.setText(f"Total: ₱{totalPrice}")
+        return totalPrice
+    
+    # ----- placeOrder -----
+    def placeOrder(self):
 
-        self.calculate_total()
-        return panel
+        name = self.customerNameInput.text().strip()
+        phone = self.customerPhoneInput.text().strip()
+        account = self.customerAccountInput.text().strip()
+        
+        # source: 
+        if self.gmailButton.isChecked():
+            source = "Gmail"
+        else:
+            source = "Facebook / Messenger"        
+            
+        # Makes it so that Name is a field that requires to be filled out
+        if not name:
+            showAlert("Missing Info", "Please fillout the required info.", self)
+            return
+        
+        # Contact number validation (numbers only, 11 digits, and should start with 09)
+        phoneDigitsValidation = phone.replace(" ", "").replace("-", "")
+        if phone and not (phoneDigitsValidation.isdigit() and len(phoneDigitsValidation) == 11 and phoneDigitsValidation.startswith("09")):
+            showAlert("Invalid Number!", "Please enter a valid phone number. (e.g. 0912 345 6789)", self)
+            return
+        
+        # Prompts the cutomer for confirmation
+        if not showConfirmOrder(name, phone, source, self.breakdownLabel.text(), self.totalLabel.text(), self):
+            return
+        
+        if self.admin_window is not None:
+            existingOrders = [int(order["id"].split("-")[1]) for order in self.admin_window.orders]
+            self.orderCount = max([self.orderCount] + existingOrders)
+            
+        self.orderCount += 1
+        orderId = "PS-" + str(self.orderCount)
+        
+        # Job description builder
+        pages = self.pagesSpin.value()
+        copies = self.copiesSpin.value()
+        size = self.sizeCombo.currentText().split(" — ")[0]
+        if "Full Color" in self.colorCombo.currentText():
+            color = "Full Color"
+        else:
+            color = "Black and White"
+        
+        copyWord    = "copy" if copies == 1 else "copies"
+        pagesWord   = "page" if pages == 1 else "pages"
+        
+        job = f"{pages} {pagesWord}, {color}, {size}, {copies} {copyWord}"
+        if self.bindingCheck.isChecked():
+            job += ", Binding"
+        if self.laminationCheck.isChecked():
+            job += ", Lamination"
+            
+        order = Order(orderId, name, phone, account, job, source, self.calculateTotal())
+        
+        # Sends the order to the admin screen
+        if self.admin_window is not None:
+            self.admin_window.addOrder(order)
+        
+        # Add the order to the status table
+        row = self.statusTable.rowCount()
+        self.statusTable.insertRow(row)
+        self.statusTable.setItem(row, 0, QTableWidgetItem(orderId))
+        self.statusTable.setItem(row, 1, QTableWidgetItem(job))
+        self.statusTable.setItem(row, 2, QTableWidgetItem("Pending"))
+        
+        showAlert("Order Placed!", f"Your order({orderId}) was successfully submitted.", self)
+        
+        # Clears the form for the next customer
+        self.customerNameInput.clear()
+        self.customerPhoneInput.clear()
+        self.customerAccountInput.clear()
+        
+        
+    # ----- updateStatusRow -----
+    def updateStatusRow(self, orderId, status):
+        for row in range(self.statusTable.rowCount()):
+            if self.statusTable.item(row, 0).text() == orderId:
+                self.statusTable.item(row, 2).setText(status)
+                
+                self.statusTable.setRowHidden(row, status in ("Completed", "Cancelled"))  # Hides cancelled jobs/orders from the user's screen
+                
+                break
+            
+    # ----- addStatusRow -----
+    def addStatusRow(self, orderId, job, status):
+        row = self.statusTable.rowCount()
+        self.statusTable.insertRow(row)
+        self.statusTable.setItem(row, 0, QTableWidgetItem(orderId))
+        self.statusTable.setItem(row, 1, QTableWidgetItem(job))
+        self.statusTable.setItem(row, 2, QTableWidgetItem(status))
+        
+        self.statusTable.setRowHidden(row, status in ("Completed", "Cancelled"))   # Hides cancelled jobs/orders from the user's screen
+        
+    # ----- removeStatusRow -----
+    def removeStatusRow(self, orderId):
+        for row in range(self.statusTable.rowCount()):
+            if self.statusTable.item(row, 0).text() == orderId:
+                self.statusTable.removeRow(row)
+                return True
+        return False
+                
+    # ----- update/set Prices -----
+    def setPrices(self, paper, legal, photoPaper, bw, color, binding, lamination):
+        self.pricePaper = paper
+        self.priceLegal = legal
+        self.pricePhotoPaper = photoPaper
+        self.priceBw = bw
+        self.priceColor = color
+        self.priceBinding = binding
+        self.priceLamination = lamination
+        
+        self.sizeCombo.setItemText(0, f"Letter / Short — ₱{paper}/pg")
+        self.sizeCombo.setItemText(1, f"A4 — ₱{paper}/pg")
+        self.sizeCombo.setItemText(2, f"Legal / Long — ₱{legal}/pg")
+        self.sizeCombo.setItemText(3, f"Photo Paper — ₱{photoPaper}/pg")
+        self.colorCombo.setItemText(0, f"Black and White — +₱{bw}/pg")
+        self.colorCombo.setItemText(1, f"Full Color — +₱{color}/pg")
+        self.bindingCheck.setText(f"Binding (+₱{binding})")
+        self.laminationCheck.setText(f"Lamination (+₱{lamination})")
 
-    def calculate_total(self) -> float:
-        paper_text = self.combo_size.currentText()
-        paper_cost = 3.00 if "Legal" in paper_text else 2.00
-
-        color_text = self.combo_color.currentText()
-        print_cost = 3.00 if "Full Color" in color_text else 2.00
-
-        pages = self.spin_pages.value()
-        copies = self.spin_copies.value()
-
-        base_paper_total = pages * paper_cost
-        color_total = pages * print_cost
-
-        addon_cost = 0.00
-        addons_list = []
-        if self.chk_binding.isChecked():
-            addon_cost += 30.00
-            addons_list.append("Binding")
-        if self.chk_lamination.isChecked():
-            addon_cost += 15.00
-            addons_list.append("Lamination")
-
-        subtotal_per_copy = base_paper_total + color_total + addon_cost
-        total_price = subtotal_per_copy * copies
-
-        addons_str = ", ".join(addons_list) if addons_list else "None"
-
-        self.lbl_breakdown.setText(
-            f"• Base Paper ({paper_text.split(' — ')[0]}): {pages} pgs × ₱{paper_cost:.2f} = ₱{base_paper_total:.2f}\n"
-            f"• Color Option ({'Full Color' if print_cost == 3 else 'B&W'}): {pages} pgs × ₱{print_cost:.2f} = ₱{color_total:.2f}\n"
-            f"• Add-ons: {addons_str} = ₱{addon_cost:.2f}\n"
-            f"• Multiplier: ₱{subtotal_per_copy:.2f} × {copies} copy"
-        )
-        self.lbl_total.setText(f"₱{total_price:.0f}")
-        return total_price
-
-    def place_order(self):
-        pass
+        self.calculateTotal()
+                
+        

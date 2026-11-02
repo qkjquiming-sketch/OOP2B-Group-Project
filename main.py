@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import QApplication
 from admin_screen import AdminWindow
 from user_screen import UserWindow
 
-
 def main():
     app = QApplication(sys.argv)
 
@@ -21,6 +20,11 @@ def main():
     screens = app.screens()
     user_win = UserWindow()
     admin_win = AdminWindow()
+    user_win.admin_window = admin_win
+    admin_win.user_window = user_win
+
+    # Saves all the orders to a CSV file when the app quits
+    app.aboutToQuit.connect(admin_win.saveOrdersToCSV)
 
     if len(screens) >= 2:
         user_win.setScreen(screens[0])
